@@ -1,5 +1,5 @@
 # From Saturation to Zero-Shot Visual Relationship Detection Using Local Context
-Code for our BMVC 2020 submission.
+Code for our BMVC 2020 paper.
 
 ## Requirements
 Tested with Python 3.5 and 3.6.
@@ -10,8 +10,8 @@ python3 -r requirements.txt
 ## Setup
 1. Clone the repository
 ```
-git clone https://github.com/vrdmaniac/zs-vrd.git
-cd zs-vrd
+git clone https://github.com/deeplab-ai/zs-vrd-bmvc20.git
+cd zs-vrd-bmvc20
 ```
 2. Setup data
 ```
