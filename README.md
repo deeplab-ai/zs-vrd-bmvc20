@@ -18,6 +18,8 @@ cd zs-vrd-bmvc20
 python3 main_prerequisites.py
 ```
 
+3. Before training with synonyms, run notebook RelationshipSimilarities.ipynb!
+
 ## Model zoo
 The full list of tested models is included in common/models.
 There are two basic model categories:
@@ -39,7 +41,6 @@ will train a visual-spatial net with a local-context-aware classifier and test i
 Other useful flags:
 * compute_accuracy: compute accuracy instead of precision
 * use_weighted_ce: weight cross-entropy terms
+* use_merged: evaluate with merged synonym classes
 * test_dataset: specify a different dataset for testing (only valid for projectors)
 
-## Still pending
-This code is part of a wider project. Specifically, the code for synonym mining is messy. We will upload a clean version in the next few days.

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Class to compute recall metrics for VRD-SGGen."""
 
+import pickle
+
 import numpy as np
 
 
 class RelationshipEvaluator:
     """A class providing methods to evaluate the VRD-SGGen problem."""
 
-    def __init__(self, annotation_loader):
+    def __init__(self, annotation_loader, use_merged=False):
         """Initialize evaluator setup for this dataset."""
         self._recall_types = np.array([20, 50, 100])  # R@20, 50, 100
         self._max_recall = self._recall_types[-1]
@@ -16,13 +18,26 @@ class RelationshipEvaluator:
         # Ground-truth labels and boxes
         annotation_loader.reset('preddet')
         annos = annotation_loader.get_annos()
+        if use_merged:
+            for anno in annos:
+                anno['relations']['ids'] = anno['relations']['merged_ids']
         zeroshot_annos = annotation_loader.get_zs_annos()
+        if use_merged:
+            for anno in zeroshot_annos:
+                anno['relations']['ids'] = anno['relations']['merged_ids']
         self._annos = {
             'full': {
                 anno['filename']: anno
                 for anno in annos if anno['split_id'] == 2},
             'zeroshot': {anno['filename']: anno for anno in zeroshot_annos}
         }
+        # Connections to classes after merge
+        self._connections = None
+        if use_merged:
+            dataset = annotation_loader._dataset
+            json_path = annotation_loader._json_path
+            with open(json_path + dataset + '_merged.pkl', 'rb') as fid:
+                self._connections = pickle.load(fid)
 
     def reset(self):
         """Initialize recall_counters."""
@@ -154,6 +169,12 @@ class RelationshipEvaluator:
         det_labels = labels[top_detections_indices[0]]
         det_labels[:, 1] = classes[top_detections_indices]
         det_bboxes = boxes[top_detections_indices[0]]
+        # If merged evaluation, transform labels
+        if self._connections is not None:
+            det_labels[:, 1] = np.array([
+                self._connections[label[0], label[2]][int(label[1])]
+                for label in det_labels
+            ])
         return det_labels, det_bboxes
 
 

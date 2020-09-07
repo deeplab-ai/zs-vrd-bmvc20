@@ -80,6 +80,7 @@ class AnnotationLoader:
                     anno = deepcopy(anno)
                     anno['relations'] = {
                         'ids': anno['relations']['ids'][keep],
+                        'merged_ids': anno['relations']['merged_ids'][keep],
                         'names': anno['relations']['names'][keep],
                         'subj_ids': anno['relations']['subj_ids'][keep],
                         'obj_ids': anno['relations']['obj_ids'][keep]
@@ -129,6 +130,7 @@ class AnnotationLoader:
         ])
         anno['relations']['names'] = anno['relations']['names'][inds]
         anno['relations']['ids'] = anno['relations']['ids'][inds]
+        anno['relations']['merged_ids'] = anno['relations']['merged_ids'][inds]
         anno['relations']['subj_ids'] = anno['relations']['subj_ids'][inds]
         anno['relations']['obj_ids'] = anno['relations']['obj_ids'][inds]
         return anno
@@ -142,6 +144,7 @@ class AnnotationLoader:
         ), axis=0, return_index=True)
         return {
             'ids': relations['ids'][unique_inds],
+            'merged_ids': relations['merged_ids'][unique_inds],
             'names': relations['names'][unique_inds],
             'subj_ids': relations['subj_ids'][unique_inds],
             'obj_ids': relations['obj_ids'][unique_inds]
@@ -155,6 +158,7 @@ class AnnotationLoader:
         ), axis=0, return_index=True)
         return {
             'ids': relations['ids'][unique_inds],
+            'merged_ids': relations['merged_ids'][unique_inds],
             'names': relations['names'][unique_inds],
             'subj_ids': relations['subj_ids'][unique_inds],
             'obj_ids': relations['obj_ids'][unique_inds]
@@ -166,6 +170,7 @@ class AnnotationLoader:
         keep_inds = keep_inds.any(1)
         return {
             'ids': relations['ids'][keep_inds],
+            'merged_ids': relations['merged_ids'][keep_inds],
             'names': relations['names'][keep_inds],
             'subj_ids': relations['subj_ids'][keep_inds],
             'obj_ids': relations['obj_ids'][keep_inds]
@@ -175,6 +180,7 @@ class AnnotationLoader:
         """Limit pairs per image for memory issues."""
         relations['names'] = relations['names'][:self._pairs_limit]
         relations['ids'] = relations['ids'][:self._pairs_limit]
+        relations['merged_ids'] = relations['merged_ids'][:self._pairs_limit]
         relations['subj_ids'] = relations['subj_ids'][:self._pairs_limit]
         relations['obj_ids'] = relations['obj_ids'][:self._pairs_limit]
         return relations
@@ -217,6 +223,8 @@ class AnnotationLoader:
                 },
                 'relations': {
                     'ids': np.array(anno['relations']['ids']).astype(int),
+                    'merged_ids': np.array(
+                        anno['relations']['merged_ids']).astype(int),
                     'names': np.array(anno['relations']['names']),
                     'subj_ids': np.array(anno['relations']['subj_ids']),
                     'obj_ids': np.array(anno['relations']['obj_ids'])

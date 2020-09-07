@@ -140,6 +140,11 @@ def parse_args():
         help='For preddet only, measure accuracy instead of recall',
         action='store_true'
     )
+    parser.add_argument(
+        '--use_merged', dest='use_merged',
+        help='Evaluate with merged predicate annotations',
+        action='store_true'
+    )
     # General model parameters
     parser.add_argument(
         '--is_not_context_projector', dest='is_not_context_projector',
@@ -241,6 +246,7 @@ def main():
         max_train_samples=args.max_train_samples,
         num_tail_classes=args.num_tail_classes,
         compute_accuracy=args.compute_accuracy,
+        use_merged=args.use_merged,
         is_context_projector=not args.is_not_context_projector,
         is_cos_sim_projector=args.is_cos_sim_projector,
         use_multi_tasking=not args.not_use_multi_tasking,

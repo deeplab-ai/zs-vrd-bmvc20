@@ -149,6 +149,7 @@ train.sh
 *.pt
 config_k8
 *.swp
+!RelationshipSimilarities.ipynb
 
 # tensorboard
 runs/

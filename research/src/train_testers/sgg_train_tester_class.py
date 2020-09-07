@@ -58,9 +58,11 @@ class SGGTrainTester(BaseTrainTester):
         if self._task == 'predcls' and self._use_multi_tasking:
             rank_eval = RankingClsEvaluator(self.annotation_loader)
         elif self._compute_accuracy or self._dataset in {'VG80K', 'UnRel'}:
-            rel_eval = RelationshipClsEvaluator(self.annotation_loader)
+            rel_eval = RelationshipClsEvaluator(self.annotation_loader,
+                                                self._use_merged)
         else:
-            rel_eval = RelationshipEvaluator(self.annotation_loader)
+            rel_eval = RelationshipEvaluator(self.annotation_loader,
+                                             self._use_merged)
 
         # Forward pass on test set
         results = {}

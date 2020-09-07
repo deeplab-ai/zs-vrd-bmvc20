@@ -62,6 +62,7 @@ class BaseTrainTester:
         self._task = config.task
         self._test_dataset = config.test_dataset
         self._use_early_stopping = config.use_early_stopping
+        self._use_merged = config.use_merged
         self._use_multi_tasking = config.use_multi_tasking
         self._use_weighted_ce = config.use_weighted_ce
         self._weight_decay = config.weight_decay

@@ -26,6 +26,7 @@ class ResearchConfig(Config):
             - augment_annotations: bool, distort boxes to augment
         Evaluation params:
             - compute_accuracy: bool, measure accuracy, not recall
+            - use_merged: bool, use merged annotations in evaluation
         Loss functions:
             - use_multi_tasking: bool, use multi-tasking to
                 separately decide for object relevance
@@ -50,7 +51,8 @@ class ResearchConfig(Config):
 
     def __init__(self, net_name='', phrase_recall=False, test_dataset=None,
                  annotations_per_batch=128, augment_annotations=True,
-                 compute_accuracy=False, use_multi_tasking=True,
+                 compute_accuracy=False, use_merged=False,
+                 use_multi_tasking=True,
                  use_weighted_ce=False, batch_size=None, epochs=None,
                  learning_rate=0.002, weight_decay=None,
                  apply_dynamic_lr=False, use_early_stopping=True,
@@ -73,6 +75,7 @@ class ResearchConfig(Config):
         self.use_multi_tasking = use_multi_tasking
         self.use_weighted_ce = use_weighted_ce
         self.compute_accuracy = compute_accuracy and self.task == 'preddet'
+        self.use_merged = use_merged
         self._batch_size = batch_size
         self._epochs = epochs
         self.learning_rate = learning_rate

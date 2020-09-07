@@ -259,8 +259,7 @@ class BaseDataset(Dataset):
                 anno['relations']['names'],
                 object_names[anno['relations']['obj_ids']]
             )])
-        pls = self.get_predicate_plausibilities(anno)
-        return np.maximum(sims, pls)
+        return sims
 
     def _add_background(self, anno):
         """Add some background annotations."""

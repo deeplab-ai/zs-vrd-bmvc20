@@ -3,6 +3,7 @@
 
 import json
 import os
+import pickle
 import shutil
 from zipfile import ZipFile
 
@@ -28,6 +29,7 @@ class DatasetTransformer:
         self._orig_images_path = config.orig_img_path
         assert os.path.exists(self._orig_images_path)
         base = config.paths['json_path'] + self._dataset
+        self._merged_json = base + '_merged.pkl'
         self._preddet_json = base + '_preddet.json'
         self._predcls_json = base + '_predcls.json'
         self._predicate_json = base + '_predicates.json'
@@ -58,17 +60,32 @@ class DatasetTransformer:
                 annos = json.load(fid)
             if not os.path.exists(self._predcls_json):
                 self.create_pred_cls_json(annos, predicates)
+            with open(self._predicate_json) as fid:
+                predicates = json.load(fid)
+            with open(self._object_json) as fid:
+                objects = json.load(fid)
             if not os.path.exists(self._probability_json):
                 with open(self._predcls_json) as fid:
                     annos = json.load(fid)
-                with open(self._predicate_json) as fid:
-                    predicates = json.load(fid)
-                with open(self._object_json) as fid:
-                    objects = json.load(fid)
                 prob_matrix = self.compute_relationship_probabilities(
                     annos, predicates, objects)
                 with open(self._probability_json, 'w') as fid:
                     json.dump(prob_matrix, fid)
+            # Merged classes
+            if not os.path.exists(self._merged_json):
+                with open(self._predcls_json) as fid:
+                    annos = json.load(fid)
+                connections = self.compute_class_merging(annos, predicates)
+                annos = self.update_annos_with_syns(annos, connections)
+                with open(self._predcls_json, 'w') as fid:
+                    json.dump(annos, fid)
+                with open(self._preddet_json) as fid:
+                    annos = json.load(fid)
+                annos = self.update_annos_with_syns(annos, connections)
+                with open(self._preddet_json, 'w') as fid:
+                    json.dump(annos, fid)
+                with open(self._merged_json, 'wb') as fid:
+                    pickle.dump(connections, fid)
 
     @staticmethod
     def create_relationship_json():
@@ -251,6 +268,68 @@ class DatasetTransformer:
                     unique_triplets[:, 2]] += 1
         prob_matrix /= prob_matrix.sum(2)[:, :, None]
         return prob_matrix.tolist()
+
+    def compute_class_merging(self, annos, predicates):
+        """Estimate synonyms to merge during evaluation."""
+        # Adjacency matrices only for existing pairs to reduce memory
+        pairs = set(
+            (subj, obj)
+            for anno in annos
+            if anno['relations']['ids']
+            for subj, obj in zip(
+                np.array(anno['objects']['ids'])[
+                    np.array(anno['relations']['subj_ids'])
+                ],
+                np.array(anno['objects']['ids'])[
+                    np.array(anno['relations']['obj_ids'])
+                ]
+            )
+        )
+        connections = {pair: np.eye(len(predicates)) for pair in pairs}
+        # Fill adjacency matrices
+        for anno in annos:
+            relations = anno['relations']
+            objects = anno['objects']['ids']
+            pairs = np.stack(
+                (relations['subj_ids'], relations['obj_ids']),
+                axis=1
+            )
+            # Find pairs with same (subj_id, obj_id)
+            common_pairs = (pairs[..., None] == pairs.T[None, ...]).all(1) * 1
+            nz_i, nz_j = common_pairs.nonzero()
+            for ind_i, ind_j in zip(nz_i, nz_j):
+                connections[
+                    objects[relations['subj_ids'][ind_i]],
+                    objects[relations['obj_ids'][ind_j]]
+                ][relations['ids'][ind_i], relations['ids'][ind_j]] = 1
+        # Densify connections (a synomym of my synonym is also mine)
+        for key, mat in connections.items():
+            connections[key] = self._densify_mat(mat).argmax(1).tolist()
+        return connections
+
+    @staticmethod
+    def _densify_mat(mat):
+        """Densify matrices per pair."""
+        old_mat = np.zeros_like(mat)
+        while (mat != old_mat).any():
+            old_mat = np.copy(mat)
+            mat = np.minimum(mat + np.matmul(mat.T, mat), 1)
+        return mat
+
+    @staticmethod
+    def update_annos_with_syns(annos, connections):
+        """Create merged_ids field in relations."""
+        for anno in annos:
+            objects = anno['objects']['ids']
+            anno['relations']['merged_ids'] = list([
+                connections[objects[subj_id], objects[obj_id]][_id]
+                for subj_id, obj_id, _id in zip(
+                    anno['relations']['subj_ids'],
+                    anno['relations']['obj_ids'],
+                    anno['relations']['ids']
+                )
+            ])
+        return annos
 
     def _download_glove(self):
         """Download GloVe embeddings."""
