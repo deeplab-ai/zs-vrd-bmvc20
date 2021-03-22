@@ -1,9 +1,9 @@
-Pillow==6.0.0
+Pillow
 colorlog==4.0.2
 gdown
 h5py
-torch==1.4.0
-torchvision==0.5.0
+torch
+torchvision
 tqdm==4.31.1
 scikit-learn==0.22.2
 pyyaml
